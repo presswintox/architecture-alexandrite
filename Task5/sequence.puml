@@ -1,0 +1,25 @@
+@startuml
+actor Client as "MES Client"
+participant "API (MES Service)" as API
+participant "Redis Cache" as Cache
+participant "Database" as DB
+
+Client -> API: Запрос списка заказов (по статусу)
+API -> Cache: Проверка кеша по ключу
+alt Данные в кеше есть
+    Cache --> API: Возврат данных из кеша
+    API --> Client: Ответ с данными
+else Данных в кеше нет
+    Cache --> API: Пустой ответ
+    API -> DB: Запрос данных из базы
+    DB --> API: Возврат данных
+    API -> Cache: Запись данных в кеш
+    API --> Client: Ответ с данными
+end
+
+Client -> API: Обновление статуса заказа
+API -> DB: Запись обновления статуса
+DB --> API: Подтверждение записи
+API -> Cache: Инвалидация кеша (удаление ключа)
+API --> Client: Подтверждение обновления
+@enduml
